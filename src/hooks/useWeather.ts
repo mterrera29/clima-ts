@@ -13,8 +13,21 @@ export default function useWeather() {
           return await res.json();
         })
         .then((res) => {
-          setData(res);
-          console.log(res);
+          const lat = res[0].lat;
+          const lon = res[0].lon;
+          const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+          fetch(weatherURL)
+            .then(async (res) => {
+              if (!res.ok) {
+                throw new Error('No se lee la url');
+              }
+              return await res.json();
+            })
+            .then((res) => {
+              const weatherResult = res;
+              console.log(weatherResult);
+            })
+            .catch((err) => console.error(err));
         })
         .catch((err) => console.error(err));
     } catch (error) {
