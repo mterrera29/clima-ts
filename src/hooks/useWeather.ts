@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SearchType } from '../types';
 import { z } from 'zod';
 
@@ -13,17 +13,25 @@ const Weather = z.object({
 
 export type Weather = z.infer<typeof Weather>;
 
+const initialState = {
+  name: '',
+  main: {
+    temp: 0,
+    temp_max: 0,
+    temp_min: 0,
+  },
+};
+
 export default function useWeather() {
-  const [weather, setWeather] = useState<Weather>({
-    name: '',
-    main: {
-      temp: 0,
-      temp_max: 0,
-      temp_min: 0,
-    },
-  });
+  const [weather, setWeather] = useState<Weather>(initialState);
+  const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+
   const fetchWeather = async (search: SearchType) => {
     const API_KEY = import.meta.env.VITE_API_KEY;
+    setNotFound(false);
+    setLoading(true);
+    setWeather(initialState);
     try {
       const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${API_KEY}`;
       fetch(geoUrl)
@@ -32,6 +40,10 @@ export default function useWeather() {
           return await res.json();
         })
         .then((res) => {
+          if (!res[0]) {
+            setNotFound(true);
+            return;
+          }
           const lat = res[0].lat;
           const lon = res[0].lon;
           const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
@@ -51,10 +63,15 @@ export default function useWeather() {
             })
             .catch((err) => console.error(err));
         })
-        .catch((err) => console.error(err));
+        .catch((err) => console.error(err))
+        .finally(() => {
+          setLoading(false);
+        });
     } catch (error) {
       console.log(error);
     }
   };
-  return { weather, fetchWeather };
+
+  const hasWeatherData = useMemo(() => weather.name, [weather]);
+  return { weather, fetchWeather, hasWeatherData, loading, notFound };
 }
