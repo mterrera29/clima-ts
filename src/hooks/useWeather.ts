@@ -33,7 +33,7 @@ export default function useWeather() {
     setLoading(true);
     setWeather(initialState);
     try {
-      const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${API_KEY}`;
+      const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${search.city},${search.country}&appid=${API_KEY}`;
       fetch(geoUrl)
         .then(async (res) => {
           if (!res.ok) throw new Error('Error en la peticion');
